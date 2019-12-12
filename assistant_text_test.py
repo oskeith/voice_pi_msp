@@ -21,7 +21,6 @@ code doesn't need to record audio. Hot word detection "OK, Google" is supported.
 It is available for Raspberry Pi 2/3 only; Pi Zero is not supported.
 """
 
-# google assistant imports
 import logging
 import platform
 import sys
@@ -31,47 +30,6 @@ from google.assistant.library.event import EventType
 from aiy.assistant import auth_helpers
 from aiy.assistant.library import Assistant
 from aiy.board import Board, Led
-
-# dialogflow imports
-import dialogflow_v2 as dialogflow
-import os
-from google.api_core.exceptions import InvalidArgument
-
-# dialogflow globals
-DIALOGFLOW_PROJECT_ID = 'p461-language-sqtqac'
-DIALOGFLOW_LANGUAGE_CODE = 'en-US'
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.expanduser('~/dialogflow.json')
-SESSION_ID = 'dam-bl0ck'
-
-session_client = dialogflow.SessionsClient()
-session = session_client.session_path(DIALOGFLOW_PROJECT_ID, SESSION_ID)
-
-def df_process(text_to_be_analyzed):
-    global session
-    
-    text_input = dialogflow.types.TextInput(text=text_to_be_analyzed, language_code=DIALOGFLOW_LANGUAGE_CODE)
-    query_input = dialogflow.types.QueryInput(text=text_input)
-    response = session_client.detect_intent(session=session, query_input=query_input)
-
-    try:
-        response = session_client.detect_intent(session=session, query_input=query_input)
-    except InvalidArgument:
-        raise
-    
-    return response
-
-def states(response):
-    detected_intent = response.query_result.intent.display_name
-    if detected_intent == "servo_command":
-        servo_angle = response.query_result.parameters.values()[0]
-        print(servo_angle)
-##    print(response.query_result.parameters.values())
-##    print(response.query_result.parameters.keys())
-##    print(response.query_result.parameters.items())
-##    print("Query text:", response.query_result.query_text)
-##    print("Detected intent:", response.query_result.intent.display_name)
-##    print("Detected intent confidence:", response.query_result.intent_detection_confidence)
-##    print("Fulfillment text:", response.query_result.fulfillment_text)
 
 def process_event(led, event):
     logging.info(event)
@@ -93,9 +51,7 @@ def process_event(led, event):
         
     elif event.type == EventType.ON_RECOGNIZING_SPEECH_FINISHED:
         heard_text = event.args["text"]
-        if heard_text != "":
-            df_response = df_process(heard_text)
-            states(df_response)
+        print(heard_text)
 
     elif event.type == EventType.ON_ASSISTANT_ERROR and event.args and event.args['is_fatal']:
         sys.exit(1)
