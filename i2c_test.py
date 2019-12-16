@@ -4,7 +4,6 @@
 # https://www.sparkfun.com/products/8736
 
 import smbus2 as smbus
-import time
 
 # I2C channel 1 is connected to the GPIO pins
 channel = 1
@@ -18,17 +17,18 @@ reg_write_dac = 0xaa
 # Initialize I2C (SMBus)
 bus = smbus.SMBus(channel)
 
-num = 0
+TXData = [0x00, 0x00]
+RXData = [None] * 1
+num_tx_bytes = len(TXData)
+num_rx_bytes = len(RXData)
 
 for i in range(0x10000):
 
-    byte1 = i & 0xFF
-    data = [byte1]
+    TXData[0] = i & 0xFF
+    TXData[1] = ~TXData[0]
 
-##    msg = [byte1]
-
-    # Write out I2C command: address, reg_write_dac, msg[0], msg[1]
-##    bus.write_i2c_block_data(address, reg_write_dac, data)
-    bus.write_byte(address, byte1)
-    read_byte = bus.read_byte(address, 1)
-    print(i, byte1, read_byte)
+    for i2c_idx in range(num_tx_bytes):
+        bus.write_byte(address, TXData[i2c_idx])
+    for i2c_idx in range(num_rx_bytes):
+        RXData[i2c_idx] = bus.read_byte(address)
+    print(i, TXData[0], RXData[0])

@@ -4,7 +4,6 @@
 # https://www.sparkfun.com/products/8736
 
 import smbus2 as smbus
-import time
 
 # I2C channel 1 is connected to the GPIO pins
 channel = 1
