@@ -21,7 +21,7 @@ code doesn't need to record audio. Hot word detection "OK, Google" is supported.
 It is available for Raspberry Pi 2/3 only; Pi Zero is not supported.
 """
 
-# google assistant imports
+### google assistant imports ###
 import logging
 import platform
 import sys
@@ -32,12 +32,15 @@ from aiy.assistant import auth_helpers
 from aiy.assistant.library import Assistant
 from aiy.board import Board, Led
 
-# dialogflow imports
+### dialogflow imports ###
 import dialogflow_v2 as dialogflow
 import os
 from google.api_core.exceptions import InvalidArgument
 
-# dialogflow globals
+### i2c import ###
+import smbus2 as smbus
+
+### dialogflow globals ###
 DIALOGFLOW_PROJECT_ID = 'p461-language-sqtqac'
 DIALOGFLOW_LANGUAGE_CODE = 'en-US'
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.expanduser('~/dialogflow.json')
@@ -45,6 +48,33 @@ SESSION_ID = 'dam-bl0ck'
 
 session_client = dialogflow.SessionsClient()
 session = session_client.session_path(DIALOGFLOW_PROJECT_ID, SESSION_ID)
+
+### i2c globals ###
+# I2C channel 1 is connected to the GPIO pins
+channel = 1
+
+#  MCP4725 defaults to address 0x60
+address = 0x25
+
+# Register addresses (with "normal mode" power-down bits)
+reg_write_dac = 0xaa
+
+# Initialize I2C (SMBus)
+bus = smbus.SMBus(channel)
+
+TXData = [0x00, 0x00]
+RXData = [None] * 1
+num_tx_bytes = len(TXData)
+num_rx_bytes = len(RXData)
+
+def next_i2c():
+    global TXData, RXData, num_tx_bytes, num_rx_bytes
+    
+    for i2c_idx in range(num_tx_bytes):
+        bus.write_byte(address, TXData[i2c_idx])
+    for i2c_idx in range(num_rx_bytes):
+        RXData[i2c_idx] = bus.read_byte(address)
+    print(TXData[0], TXData[1], RXData[0])
 
 def df_process(text_to_be_analyzed):
     global session
@@ -61,10 +91,13 @@ def df_process(text_to_be_analyzed):
     return response
 
 def states(response):
+    global TXData
     detected_intent = response.query_result.intent.display_name
     if detected_intent == "servo_command":
         servo_angle = response.query_result.parameters.values()[0]
         print(servo_angle)
+        TXData[0:2] = [0x13, 0x24]
+        next_i2c()
 ##    print(response.query_result.parameters.values())
 ##    print(response.query_result.parameters.keys())
 ##    print(response.query_result.parameters.items())
