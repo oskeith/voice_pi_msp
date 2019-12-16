@@ -17,7 +17,7 @@ reg_write_dac = 0xaa
 # Initialize I2C (SMBus)
 bus = smbus.SMBus(channel)
 
-TXData = [0x00, 0x00]
+TXData = [0x00, 0x00, 0x00]
 RXData = [None] * 1
 num_tx_bytes = len(TXData)
 num_rx_bytes = len(RXData)
@@ -26,6 +26,7 @@ for i in range(0x10000):
 
     TXData[0] = i & 0xFF
     TXData[1] = ~TXData[0]
+    TXData[2] = ~TXData[1]
 
     for i2c_idx in range(num_tx_bytes):
         bus.write_byte(address, TXData[i2c_idx])

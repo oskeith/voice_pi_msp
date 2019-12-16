@@ -62,7 +62,7 @@ reg_write_dac = 0xaa
 # Initialize I2C (SMBus)
 bus = smbus.SMBus(channel)
 
-TXData = [0x00, 0x00]
+TXData = [0x00, 0x00, 0x00]
 RXData = [None] * 1
 num_tx_bytes = len(TXData)
 num_rx_bytes = len(RXData)
@@ -74,7 +74,7 @@ def next_i2c():
         bus.write_byte(address, TXData[i2c_idx])
     for i2c_idx in range(num_rx_bytes):
         RXData[i2c_idx] = bus.read_byte(address)
-    print(TXData[0], TXData[1], RXData[0])
+    print(TXData[0], (TXData[1]<<8)|TXData[2], RXData[0])
 
 def df_process(text_to_be_analyzed):
     global session
@@ -94,15 +94,31 @@ def states(response):
     global TXData
     detected_intent = response.query_result.intent.display_name
     if detected_intent == "servo_command":
-        servo_angle = response.query_result.parameters.values()[0]
-        print(servo_angle)
-        TXData[0:2] = [0x13, 0x24]
+        servo_angle = int(response.query_result.parameters.values()[0])
+        # MUST typecast
+        TXData[0:3] = [0x11, (servo_angle&0xFF00)>>8, servo_angle&0xFF]
+        next_i2c()
+    elif detected_intent == "led_all_off":
+        TXData[0:3] = [0x21, 0, 0]
+        next_i2c()
+    elif detected_intent == "led_single_command":
+        which = int(response.query_result.parameters.values()[0])
+        # MUST typecast
+        TXData[0:3] = [0x31, (which&0xFF00)>>8, which&0xFF]
+        next_i2c()
+    elif detected_intent == "led_count_command":
+        count = int(response.query_result.parameters.values()[0])
+        # MUST typecast
+        TXData[0:3] = [0x41, (count&0xFF00)>>8, count&0xFF]
+        next_i2c()
+    elif detected_intent == "flashing_lights":
+        TXData[0:3] = [0x51, 0, 0]
         next_i2c()
 ##    print(response.query_result.parameters.values())
 ##    print(response.query_result.parameters.keys())
 ##    print(response.query_result.parameters.items())
 ##    print("Query text:", response.query_result.query_text)
-##    print("Detected intent:", response.query_result.intent.display_name)
+    print("Detected intent:", response.query_result.intent.display_name)
 ##    print("Detected intent confidence:", response.query_result.intent_detection_confidence)
 ##    print("Fulfillment text:", response.query_result.fulfillment_text)
 
@@ -144,4 +160,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        bus.close()
+        sys.exit(1)
