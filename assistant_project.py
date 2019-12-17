@@ -114,12 +114,17 @@ def states(response):
     elif detected_intent == "flashing_lights":
         TXData[0:3] = [0x51, 0, 0]
         next_i2c()
+    elif detected_intent == "metronome":
+        bpm = int(response.query_result.parameters.values()[0])
+        # MUST typecast
+        TXData[0:3] = [0x61, (bpm&0xFF00)>>8, bpm&0xFF]
+        next_i2c()
 ##    print(response.query_result.parameters.values())
 ##    print(response.query_result.parameters.keys())
 ##    print(response.query_result.parameters.items())
 ##    print("Query text:", response.query_result.query_text)
     print("Detected intent:", response.query_result.intent.display_name)
-##    print("Detected intent confidence:", response.query_result.intent_detection_confidence)
+    print("Detected intent confidence:", response.query_result.intent_detection_confidence)
 ##    print("Fulfillment text:", response.query_result.fulfillment_text)
 
 def process_event(led, event):
