@@ -40,6 +40,10 @@ from google.api_core.exceptions import InvalidArgument
 ### i2c import ###
 import smbus2 as smbus
 
+### terminal imports ###
+from subprocess import call
+import random
+
 ### dialogflow globals ###
 DIALOGFLOW_PROJECT_ID = 'p461-language-sqtqac'
 DIALOGFLOW_LANGUAGE_CODE = 'en-US'
@@ -119,6 +123,12 @@ def states(response):
         # MUST typecast
         TXData[0:3] = [0x61, (bpm&0xFF00)>>8, bpm&0xFF]
         next_i2c()
+    elif detected_intent == "dan_count":
+        call("cd /home/pi/Documents/461_proj/sounds; aplay one.wav; aplay two.wav; aplay three.wav; aplay four.wav; aplay five.wav", shell=True)
+    elif detected_intent == "dan_words":
+        word_list = ["alrightgood.wav", "astar.wav", "waypoint.wav", "weeds.wav"]
+        word_choice = word_list[int(random.random()*len(word_list))]
+        call("cd /home/pi/Documents/461_proj/sounds; aplay %s" %(word_choice), shell=True)
 ##    print(response.query_result.parameters.values())
 ##    print(response.query_result.parameters.keys())
 ##    print(response.query_result.parameters.items())
