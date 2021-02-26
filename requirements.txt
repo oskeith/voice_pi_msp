@@ -1,4 +1,4 @@
-aiohttp==3.4.4
+aiohttp==3.7.4
 -e git+https://github.com/google/aiyprojects-raspbian@5c74ce5154fe9ecdab5901e01b567d47fbdc068f#egg=aiy_projects_python&subdirectory=src
 async-timeout==3.0.1
 attrs==18.2.0
