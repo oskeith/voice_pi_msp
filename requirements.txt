@@ -95,6 +95,6 @@ thonny==2.1.16
 touchphat==0.0.1
 twython==3.4.0
 unicornhathd==0.0.4
-urllib3==1.25.7
+urllib3==1.26.5
 Werkzeug==0.11.15
 yarl==1.2.6
